@@ -1,3 +1,13 @@
+# Core dependencies
 pyyaml>=6.0
 click>=8.0
 rich>=13.0
+
+# Web scraping for policy updates
+requests>=2.28
+beautifulsoup4>=4.12
+
+# Development
+pytest>=7.0
+pytest-cov>=4.0
+ruff>=0.1.0

@@ -1,0 +1,62 @@
+name: Auto-Update Policies
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday
+  workflow_dispatch:
+
+jobs:
+  update-policies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install beautifulsoup4 requests
+      
+      - name: Fetch latest policies
+        run: |
+          cd src
+          python -c "
+          from scrapers import ApplePolicyScraper, GooglePolicyScraper
+          
+          apple = ApplePolicyScraper()
+          google = GooglePolicyScraper()
+          
+          apple_policies = apple.fetch_policies()
+          google_policies = google.fetch_policies()
+          
+          print(f'Apple policies: {len(apple_policies)}')
+          print(f'Google policies: {len(google_policies)}')
+          "
+      
+      - name: Check for policy changes
+        id: check_changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create PR for policy updates
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "🔄 Auto-update policies from Apple & Google"
+          title: "Policy Update: New guidelines detected"
+          body: |
+            ## Automated Policy Update
+            
+            This PR contains updated policies fetched from:
+            - Apple App Store Review Guidelines
+            - Google Play Developer Policy
+            
+            Please review the changes before merging.
+          branch: auto-policy-update
+          labels: policy-update, automated

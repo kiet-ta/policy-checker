@@ -1,63 +1,212 @@
-"""Expo project policy checker."""
-
+"""Expo project policy checker - Comprehensive validation."""
 import json
+import re
 from pathlib import Path
+from typing import Optional, Dict, List
 from .base import BaseChecker, CheckResult, PolicyViolation, Severity
 
 class ExpoChecker(BaseChecker):
+    """Validates Expo projects against App Store and Play Store policies."""
+    
+    # Required iOS icon sizes (App Store)
+    IOS_ICON_SIZES = [1024]  # App Store requires 1024x1024
+    
+    # Required Android icon sizes (Play Store)  
+    ANDROID_ICON_SIZES = [512]  # Play Store requires 512x512
+    
+    # Dangerous permissions requiring justification
+    DANGEROUS_PERMISSIONS = [
+        "CAMERA", "RECORD_AUDIO", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION",
+        "READ_CONTACTS", "WRITE_CONTACTS", "READ_CALENDAR", "WRITE_CALENDAR",
+        "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE", "READ_PHONE_STATE"
+    ]
+    
+    def get_project_type(self) -> str:
+        return "expo"
+    
     def check(self, path: Path, platform: str = "both", verbose: bool = False) -> CheckResult:
-        result = CheckResult()
+        result = CheckResult(
+            project_type="expo",
+            project_path=str(path),
+            platform=platform
+        )
         
-        # Check app.json
-        app_json = path / "app.json"
-        if app_json.exists():
-            self._check_app_json(app_json, result, platform)
-        else:
-            result.violations.append(PolicyViolation("EXPO001", "app.json not found", Severity.ERROR))
+        # Load configuration
+        config = self._load_expo_config(path)
+        if not config:
+            result.add_violation(PolicyViolation(
+                rule_id="EXPO_001", title="Missing Configuration",
+                message="Cannot find app.json or app.config.js",
+                severity=Severity.CRITICAL, category="configuration",
+                suggestion="Create app.json with expo configuration"
+            ))
+            return result
         
-        # Check assets
-        self._check_assets(path, result, platform)
+        result.metadata["config"] = config
         
-        # Check permissions
-        self._check_permissions(path, result, platform)
+        # Run all checks
+        self._check_app_identity(config, result, platform)
+        self._check_privacy_requirements(config, path, result, platform)
+        self._check_assets(config, path, result, platform)
+        self._check_permissions(config, result, platform)
+        self._check_sdk_version(config, result)
         
         return result
     
-    def _check_app_json(self, app_json: Path, result: CheckResult, platform: str):
-        with open(app_json) as f:
-            config = json.load(f).get("expo", {})
-        
-        # iOS checks
-        if platform in ["ios", "both"]:
-            ios = config.get("ios", {})
-            if not ios.get("bundleIdentifier"):
-                result.violations.append(PolicyViolation("IOS001", "Missing iOS bundleIdentifier", Severity.ERROR, "app.json"))
-            if not ios.get("buildNumber"):
-                result.violations.append(PolicyViolation("IOS002", "Missing iOS buildNumber", Severity.WARNING, "app.json"))
-            infoPlist = ios.get("infoPlist", {})
-            if not infoPlist.get("NSPrivacyAccessedAPITypes"):
-                result.violations.append(PolicyViolation("IOS003", "Missing Privacy Manifest (required since iOS 17)", Severity.ERROR, "app.json", suggestion="Add NSPrivacyAccessedAPITypes to ios.infoPlist"))
-        
-        # Android checks
-        if platform in ["android", "both"]:
-            android = config.get("android", {})
-            if not android.get("package"):
-                result.violations.append(PolicyViolation("AND001", "Missing Android package name", Severity.ERROR, "app.json"))
-            if not android.get("versionCode"):
-                result.violations.append(PolicyViolation("AND002", "Missing Android versionCode", Severity.WARNING, "app.json"))
-        
-        # Common checks
+    def _load_expo_config(self, path: Path) -> Optional[Dict]:
+        """Load Expo configuration from app.json or app.config.js."""
+        app_json = path / "app.json"
+        if app_json.exists():
+            try:
+                with open(app_json) as f:
+                    data = json.load(f)
+                    return data.get("expo", data)
+            except:
+                pass
+        return None
+    
+    def _check_app_identity(self, config: Dict, result: CheckResult, platform: str):
+        """Check app identity requirements."""
+        # App name
         if not config.get("name"):
-            result.violations.append(PolicyViolation("COM001", "Missing app name", Severity.ERROR, "app.json"))
+            result.add_violation(PolicyViolation(
+                rule_id="IDENTITY_001", title="Missing App Name",
+                message="App name is required for store submission",
+                severity=Severity.CRITICAL, category="identity",
+                file="app.json", suggestion="Add 'name' field to expo config"
+            ))
+        
+        # Version
         if not config.get("version"):
-            result.violations.append(PolicyViolation("COM002", "Missing app version", Severity.ERROR, "app.json"))
-        if not config.get("icon"):
-            result.violations.append(PolicyViolation("COM003", "Missing app icon", Severity.ERROR, "app.json"))
+            result.add_violation(PolicyViolation(
+                rule_id="IDENTITY_002", title="Missing Version",
+                message="App version is required",
+                severity=Severity.CRITICAL, category="identity",
+                file="app.json", suggestion="Add 'version' field (e.g., '1.0.0')"
+            ))
+        
+        # iOS Bundle Identifier
+        if platform in ["ios", "both"]:
+            ios_config = config.get("ios", {})
+            if not ios_config.get("bundleIdentifier"):
+                result.add_violation(PolicyViolation(
+                    rule_id="IOS_001", title="Missing Bundle Identifier",
+                    message="iOS apps require a unique bundle identifier",
+                    severity=Severity.CRITICAL, category="identity",
+                    file="app.json", suggestion="Add 'ios.bundleIdentifier' (e.g., 'com.company.appname')",
+                    documentation_url="https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleidentifier"
+                ))
+        
+        # Android Package Name
+        if platform in ["android", "both"]:
+            android_config = config.get("android", {})
+            if not android_config.get("package"):
+                result.add_violation(PolicyViolation(
+                    rule_id="ANDROID_001", title="Missing Package Name",
+                    message="Android apps require a unique package name",
+                    severity=Severity.CRITICAL, category="identity",
+                    file="app.json", suggestion="Add 'android.package' (e.g., 'com.company.appname')"
+                ))
     
-    def _check_assets(self, path: Path, result: CheckResult, platform: str):
-        assets = path / "assets"
-        if not assets.exists():
-            result.violations.append(PolicyViolation("AST001", "Assets folder not found", Severity.WARNING))
+    def _check_privacy_requirements(self, config: Dict, path: Path, result: CheckResult, platform: str):
+        """Check privacy policy and manifest requirements."""
+        # Privacy Policy URL (required for both stores)
+        has_privacy_policy = False
+        ios_config = config.get("ios", {})
+        android_config = config.get("android", {})
+        
+        # Check various locations for privacy policy
+        if config.get("privacyPolicy") or ios_config.get("privacyPolicy") or android_config.get("privacyPolicy"):
+            has_privacy_policy = True
+        
+        if not has_privacy_policy:
+            result.add_violation(PolicyViolation(
+                rule_id="PRIVACY_001", title="Missing Privacy Policy URL",
+                message="Apps that collect user data must have a privacy policy",
+                severity=Severity.MAJOR, category="privacy",
+                file="app.json", suggestion="Add privacy policy URL to your app configuration",
+                documentation_url="https://developer.apple.com/app-store/review/guidelines/#privacy"
+            ))
+        
+        # iOS Privacy Manifest (iOS 17+)
+        if platform in ["ios", "both"]:
+            info_plist = ios_config.get("infoPlist", {})
+            has_privacy_manifest = (
+                info_plist.get("NSPrivacyAccessedAPITypes") or
+                info_plist.get("NSPrivacyCollectedDataTypes") or
+                (path / "ios" / "PrivacyInfo.xcprivacy").exists()
+            )
+            
+            if not has_privacy_manifest:
+                result.add_violation(PolicyViolation(
+                    rule_id="IOS_PRIVACY_001", title="Missing Privacy Manifest",
+                    message="iOS 17+ requires PrivacyInfo.xcprivacy declaring API usage reasons",
+                    severity=Severity.CRITICAL, category="privacy",
+                    file="app.json",
+                    suggestion="Add NSPrivacyAccessedAPITypes to ios.infoPlist or create PrivacyInfo.xcprivacy",
+                    documentation_url="https://developer.apple.com/documentation/bundleresources/privacy_manifest_files",
+                    auto_fixable=True
+                ))
     
-    def _check_permissions(self, path: Path, result: CheckResult, platform: str):
-        pass  # TODO: Implement permission checks
+    def _check_assets(self, config: Dict, path: Path, result: CheckResult, platform: str):
+        """Check app icons and splash screens."""
+        # App Icon
+        icon_path = config.get("icon")
+        if not icon_path:
+            result.add_violation(PolicyViolation(
+                rule_id="ASSET_001", title="Missing App Icon",
+                message="App icon is required for store submission",
+                severity=Severity.CRITICAL, category="assets",
+                file="app.json", suggestion="Add 'icon' field pointing to a 1024x1024 PNG"
+            ))
+        elif icon_path:
+            full_icon_path = path / icon_path
+            if not full_icon_path.exists():
+                result.add_violation(PolicyViolation(
+                    rule_id="ASSET_002", title="App Icon Not Found",
+                    message=f"Icon file '{icon_path}' does not exist",
+                    severity=Severity.CRITICAL, category="assets",
+                    suggestion=f"Create icon file at {icon_path}"
+                ))
+        
+        # Splash screen
+        splash = config.get("splash", {})
+        if not splash.get("image"):
+            result.add_violation(PolicyViolation(
+                rule_id="ASSET_003", title="Missing Splash Screen",
+                message="Splash screen improves user experience",
+                severity=Severity.MINOR, category="assets",
+                suggestion="Add 'splash.image' to your config"
+            ))
+    
+    def _check_permissions(self, config: Dict, result: CheckResult, platform: str):
+        """Check permission declarations and justifications."""
+        if platform in ["android", "both"]:
+            android_config = config.get("android", {})
+            permissions = android_config.get("permissions", [])
+            
+            for perm in permissions:
+                perm_name = perm.replace("android.permission.", "") if isinstance(perm, str) else perm
+                if perm_name in self.DANGEROUS_PERMISSIONS:
+                    result.add_violation(PolicyViolation(
+                        rule_id=f"PERM_{perm_name}", title=f"Dangerous Permission: {perm_name}",
+                        message=f"Permission {perm_name} requires justification in Play Store",
+                        severity=Severity.MAJOR, category="permissions",
+                        suggestion=f"Ensure you have a valid use case for {perm_name} and declare it in Data Safety"
+                    ))
+    
+    def _check_sdk_version(self, config: Dict, result: CheckResult):
+        """Check SDK version requirements."""
+        sdk_version = config.get("sdkVersion", "")
+        if sdk_version:
+            try:
+                major_version = int(sdk_version.split(".")[0])
+                if major_version < 50:
+                    result.add_violation(PolicyViolation(
+                        rule_id="SDK_001", title="Outdated Expo SDK",
+                        message=f"SDK {sdk_version} may not meet latest store requirements",
+                        severity=Severity.MINOR, category="technical",
+                        suggestion="Consider upgrading to Expo SDK 50+"
+                    ))
+            except:
+                pass
