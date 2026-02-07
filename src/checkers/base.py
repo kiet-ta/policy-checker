@@ -177,3 +177,39 @@ class BaseChecker(ABC):
             return path.read_text()
         except:
             return None
+    
+    def check_dynamic_rules(self, path: Path, platform: str, result: "CheckResult") -> None:
+        """Evaluate dynamic rules from YAML configuration.
+        
+        This method loads rules from the RuleEngine and converts any violations
+        to PolicyViolation objects, adding them to the result.
+        
+        Args:
+            path: Project root path to check
+            platform: Target platform ('ios', 'android', or 'both')
+            result: CheckResult to add violations to
+        """
+        try:
+            from ..rules import RuleEngine
+            
+            engine = RuleEngine()
+            violations = engine.check_all(path, platform)
+            
+            for rule in violations:
+                result.add_violation(PolicyViolation(
+                    rule_id=rule.id,
+                    title=rule.title,
+                    message=rule.description,
+                    severity=Severity(rule.severity.value),
+                    category=rule.category,
+                    suggestion=rule.suggestion,
+                    auto_fixable=rule.auto_fixable,
+                    documentation_url=rule.source_url
+                ))
+        except ImportError as e:
+            # Log but don't fail if RuleEngine not available
+            pass
+        except Exception as e:
+            # Log unexpected errors but continue with hardcoded checks
+            pass
+

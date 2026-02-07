@@ -1,0 +1,154 @@
+# Dynamic Rule Engine - Policy Rules Configuration
+# Version 1.0 - Migrated from hardcoded checks
+# This file is auto-updated by the AI policy crawler
+
+version: "1.0"
+last_updated: "2026-02-07"
+
+rules:
+  # ===========================================================================
+  # COMMON RULES (Both Platforms)
+  # ===========================================================================
+  
+  - id: "COMMON_NAME_001"
+    platform: "both"
+    title: "Missing App Name"
+    description: "App name is required for store submission"
+    severity: "critical"
+    category: "identity"
+    metadata:
+      source_url: "https://docs.expo.dev/versions/latest/config/app/"
+      quote: "name: The name of your app as it will appear in the app drawer."
+      ai_reasoning: "Legacy rule migrated from v1.0 hardcoded checks."
+    conditions:
+      - type: "json_path_exists"
+        target: "app.json"
+        path: "$.expo.name"
+    suggestion: "Add 'name' field to expo config"
+
+  - id: "COMMON_VERSION_001"
+    platform: "both"
+    title: "Missing App Version"
+    description: "App version is required for store submission"
+    severity: "critical"
+    category: "identity"
+    metadata:
+      source_url: "https://docs.expo.dev/versions/latest/config/app/"
+      quote: "version: The version of your app."
+      ai_reasoning: "Legacy rule migrated from v1.0 hardcoded checks."
+    conditions:
+      - type: "json_path_exists"
+        target: "app.json"
+        path: "$.expo.version"
+    suggestion: "Add 'version' field (e.g., '1.0.0')"
+
+  - id: "COMMON_ICON_001"
+    platform: "both"
+    title: "Missing App Icon Configuration"
+    description: "App icon is required for store submission"
+    severity: "critical"
+    category: "assets"
+    metadata:
+      source_url: "https://docs.expo.dev/guides/icons/"
+      quote: "icon: Local path to an image to use as the icon for your app."
+      ai_reasoning: "Legacy rule migrated from v1.0 hardcoded checks."
+    conditions:
+      - type: "json_path_exists"
+        target: "app.json"
+        path: "$.expo.icon"
+    suggestion: "Add 'icon' field pointing to a 1024x1024 PNG"
+
+  # ===========================================================================
+  # iOS RULES
+  # ===========================================================================
+
+  - id: "IOS_BUNDLE_001"
+    platform: "ios"
+    title: "Missing Bundle Identifier"
+    description: "iOS apps require a unique bundle identifier for App Store submission"
+    severity: "critical"
+    category: "identity"
+    source_url: "https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleidentifier"
+    metadata:
+      source_url: "https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleidentifier"
+      quote: "CFBundleIdentifier keys are required."
+      ai_reasoning: "Legacy rule migrated from v1.0 hardcoded checks."
+    conditions:
+      - type: "json_path_exists"
+        target: "app.json"
+        path: "$.expo.ios.bundleIdentifier"
+    suggestion: "Add 'ios.bundleIdentifier' (e.g., 'com.company.appname')"
+
+  - id: "IOS_PRIV_001"
+    platform: "ios"
+    title: "Privacy Manifest Required"
+    description: "iOS 17+ requires PrivacyInfo.xcprivacy declaring API usage reasons"
+    severity: "critical"
+    category: "privacy"
+    source_url: "https://developer.apple.com/documentation/bundleresources/privacy_manifest_files"
+    metadata:
+      source_url: "https://developer.apple.com/documentation/bundleresources/privacy_manifest_files"
+      quote: "Apps must include a Privacy Manifest declaring API usage reasons."
+      ai_reasoning: "Legacy rule migrated from v1.0 hardcoded checks."
+    auto_fixable: true
+    conditions:
+      - type: "any_of"
+        checks:
+          - type: "json_path_exists"
+            target: "app.json"
+            path: "$.expo.ios.infoPlist.NSPrivacyAccessedAPITypes"
+          - type: "json_path_exists"
+            target: "app.json"
+            path: "$.expo.ios.infoPlist.NSPrivacyCollectedDataTypes"
+          - type: "file_exists"
+            target: "ios/PrivacyInfo.xcprivacy"
+    suggestion: "Add NSPrivacyAccessedAPITypes to ios.infoPlist or create PrivacyInfo.xcprivacy"
+
+  # ===========================================================================
+  # ANDROID RULES
+  # ===========================================================================
+
+  - id: "ANDROID_PKG_001"
+    platform: "android"
+    title: "Missing Package Name"
+    description: "Android apps require a unique package name for Play Store submission"
+    severity: "critical"
+    category: "identity"
+    metadata:
+      source_url: "https://developer.android.com/studio/build/application-id"
+      quote: "Every Android app has a unique application ID."
+      ai_reasoning: "Legacy rule migrated from v1.0 hardcoded checks."
+    conditions:
+      - type: "json_path_exists"
+        target: "app.json"
+        path: "$.expo.android.package"
+    suggestion: "Add 'android.package' (e.g., 'com.company.appname')"
+
+  # ===========================================================================
+  # PRIVACY RULES
+  # ===========================================================================
+
+  - id: "PRIVACY_POLICY_001"
+    platform: "both"
+    title: "Missing Privacy Policy URL"
+    description: "Apps that collect user data must have a privacy policy URL"
+    severity: "major"
+    category: "privacy"
+    source_url: "https://developer.apple.com/app-store/review/guidelines/#privacy"
+    metadata:
+      source_url: "https://developer.apple.com/app-store/review/guidelines/#privacy"
+      quote: "All apps must include a link to their privacy policy."
+      ai_reasoning: "Legacy rule migrated from v1.0 hardcoded checks."
+    conditions:
+      - type: "any_of"
+        checks:
+          - type: "json_path_exists"
+            target: "app.json"
+            path: "$.expo.privacyPolicy"
+          - type: "json_path_exists"
+            target: "app.json"
+            path: "$.expo.ios.privacyPolicy"
+          - type: "json_path_exists"
+            target: "app.json"
+            path: "$.expo.android.privacyPolicy"
+    suggestion: "Add privacy policy URL to your app configuration"

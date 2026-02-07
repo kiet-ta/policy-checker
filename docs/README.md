@@ -422,6 +422,13 @@ jobs:
 
 ## 5. Chi Tiết Kỹ Thuật
 
+> **Đọc thêm tài liệu chuyên sâu:**
+> - [📘 Dynamic Rule Engine & Interpreter Pattern](./rule-engine.md)
+> - [🤖 AI Integration & Prompt Engineering](./ai-integration.md)
+> - [🔒 Security Hardening & Validation](./security-hardening.md)
+> - [🖼️ Image Processing & Icon Validation](./image-processing.md)
+> - [🕷️ Policy Scrapers & Caching](./scrapers.md)
+
 ### 5.1 Data Classes
 
 ```python

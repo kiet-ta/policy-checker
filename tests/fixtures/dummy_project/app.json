@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Dummy App",
+    "slug": "dummy-app",
+    "version": "1.0.0",
+    "ios": {
+      "bundleIdentifier": "com.example.dummyapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan codes."
+      }
+    },
+    "android": {
+      "package": "com.example.dummyapp",
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION"]
+    }
+  }
+}

@@ -262,7 +262,58 @@ def check_project(args):
                 # Re-run check to see improvements
                 result = engine.check(path, args.type, args.platform, args.verbose)
         
-        result.output(args.output)
+        if args.output == "text":
+            try:
+                from rich.console import Console
+                from rich.panel import Panel
+                from rich.text import Text
+                
+                console = Console()
+                
+                # Header
+                console.print(f"\n[bold blue]📱 MOBILE APP POLICY CHECK RESULTS[/bold blue]")
+                console.print(f"Project: {path}")
+                console.print(f"Type: {args.type.upper()} | Platform: {args.platform.upper()}\n")
+                
+                if result.passed:
+                    console.print(Panel("[bold green]✅ ALL CHECKS PASSED[/bold green]", expand=False))
+                else:
+                    console.print(f"[bold red]🚫 FOUND {len(result.violations)} VIOLATIONS[/bold red]\n")
+                    
+                    for v in result.violations:
+                        # Determine color based on severity
+                        color = "red" if v.severity == "critical" else "yellow"
+                        
+                        # Main violation panel
+                        content = Text()
+                        content.append(f"{v.rule_id}: {v.title}\n", style="bold")
+                        content.append(f"{v.message}\n")
+                        
+                        if v.file:
+                            content.append(f"📁 {v.file}:{v.line if v.line else ''}\n", style="dim")
+                        
+                        content.append(f"💡 {v.suggestion}\n", style="italic")
+                        
+                        # AI Context Section
+                        if hasattr(v, 'metadata') and v.metadata:
+                            content.append("\n🤖 AI Context:\n", style="bold cyan")
+                            if v.metadata.get('ai_reasoning'):
+                                content.append(f"{v.metadata['ai_reasoning']}\n", style="cyan")
+                            if v.metadata.get('source_url'):
+                                content.append(f"🔗 Source: {v.metadata['source_url']}\n", style="blue underline")
+                        
+                        console.print(Panel(content, border_style=color, expand=False))
+                        console.print()
+                        
+                    console.print(f"Summary: {result.critical_count} critical, {len(result.violations) - result.critical_count} others")
+                    console.print(f"Status: {'[bold red]🚫 WILL BE REJECTED[/bold red]' if result.critical_count > 0 else '[bold yellow]⚠️ WARNINGS FOUND[/bold yellow]'}")
+                    
+            except ImportError:
+                # Fallback to standard text output
+                result.output(args.output)
+        else:
+            result.output(args.output)
+
         return 0 if result.passed else 1
         
     except ValueError as e:

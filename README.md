@@ -128,6 +128,27 @@ policy-checker generate-assets ./my-project
 policy-checker update-policies
 ```
 
+## 🤖 AI-Powered Updates
+This tool uses advanced LLMs (GPT-4/Claude) to keep your policy rules up-to-date automatically.
+
+### How it works
+1.  **Weekly Scan**: GitHub Actions scans Apple & Google documentation every Monday.
+2.  **Change Detection**: Identifies new or modified policies.
+3.  **Rule Generation**: AI converts policy text into machine-checkable rules.
+4.  **Dry-Run Validation**: New rules are tested against a dummy project to ensure safety.
+5.  **Human Review**: A Pull Request is created with a detailed checklist for human approval.
+
+> **Zero-Touch Maintenance**: You don't need to manually update rules. Just review and merge the PRs!
+
+## Chi Tiết Kỹ Thuật
+
+> **Đọc thêm tài liệu chuyên sâu:**
+> - [📘 Dynamic Rule Engine & Interpreter Pattern](./rule-engine.md)
+> - [🤖 AI Integration & Prompt Engineering](./ai-integration.md)
+> - [🔒 Security Hardening & Validation](./security-hardening.md)
+> - [🖼️ Image Processing & Icon Validation](./image-processing.md)
+> - [🕷️ Policy Scrapers & Caching](./scrapers.md)
+
 ## 🔍 What Gets Checked
 
 ### iOS (App Store)
