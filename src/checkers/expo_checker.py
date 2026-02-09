@@ -1,8 +1,7 @@
 """Expo project policy checker with enhanced image validation."""
 import json
-import re
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 from .base import BaseChecker, CheckResult, PolicyViolation, Severity
 
 class ExpoChecker(BaseChecker):
@@ -55,7 +54,7 @@ class ExpoChecker(BaseChecker):
                 with open(app_json) as f:
                     data = json.load(f)
                     return data.get("expo", data)
-            except:
+            except Exception:
                 pass
         return None
     
@@ -305,5 +304,5 @@ class ExpoChecker(BaseChecker):
                         severity=Severity.MINOR, category="technical",
                         suggestion="Consider upgrading to Expo SDK 50+"
                     ))
-            except:
+            except Exception:
                 pass

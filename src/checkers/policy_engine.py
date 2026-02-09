@@ -1,6 +1,6 @@
 """Policy Engine - Orchestrates policy checking with live updates."""
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 from .base import CheckResult
 from .expo_checker import ExpoChecker
 from .flutter_checker import FlutterChecker

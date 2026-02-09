@@ -72,7 +72,7 @@ class CheckResult:
     def _output_text(self) -> str:
         lines = [
             f"\n{'='*70}",
-            f"📱 MOBILE APP POLICY CHECK RESULTS",
+            "📱 MOBILE APP POLICY CHECK RESULTS",
             f"{'='*70}",
             f"Project: {self.project_path}",
             f"Type: {self.project_type.upper()} | Platform: {self.platform.upper()}",
@@ -99,7 +99,7 @@ class CheckResult:
                     if v.suggestion:
                         lines.append(f"   💡 {v.suggestion}")
                     if v.auto_fixable:
-                        lines.append(f"   🔧 Auto-fixable: Run with --fix")
+                        lines.append("   🔧 Auto-fixable: Run with --fix")
         
         lines.extend([
             f"\n{'='*70}",
@@ -127,8 +127,8 @@ class CheckResult:
     def _output_markdown(self) -> str:
         lines = [
             "# 📱 Policy Check Report\n",
-            f"| Property | Value |",
-            f"|----------|-------|",
+            "| Property | Value |",
+            "|----------|-------|",
             f"| Project | `{self.project_path}` |",
             f"| Type | {self.project_type} |",
             f"| Platform | {self.platform} |",
@@ -169,13 +169,13 @@ class BaseChecker(ABC):
         try:
             with open(path) as f:
                 return json.load(f)
-        except:
+        except Exception:
             return None
     
     def _read_file(self, path: Path) -> Optional[str]:
         try:
             return path.read_text()
-        except:
+        except Exception:
             return None
     
     def check_dynamic_rules(self, path: Path, platform: str, result: "CheckResult") -> None:
@@ -206,10 +206,10 @@ class BaseChecker(ABC):
                     auto_fixable=rule.auto_fixable,
                     documentation_url=rule.source_url
                 ))
-        except ImportError as e:
+        except ImportError:
             # Log but don't fail if RuleEngine not available
             pass
-        except Exception as e:
+        except Exception:
             # Log unexpected errors but continue with hardcoded checks
             pass
 

@@ -8,7 +8,7 @@ import os
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 
 import yaml
 

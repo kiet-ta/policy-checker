@@ -1,9 +1,8 @@
 """Image processing and validation for mobile app assets."""
-import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass
-from PIL import Image, ImageStat
+from PIL import Image
 import hashlib
 
 @dataclass
