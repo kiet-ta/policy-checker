@@ -207,9 +207,9 @@ class BaseChecker(ABC):
                     documentation_url=rule.source_url
                 ))
         except ImportError:
-            # Log but don't fail if RuleEngine not available
+            # RuleEngine not available - continue with hardcoded checks only
             pass
         except Exception:
-            # Log unexpected errors but continue with hardcoded checks
+            # Unexpected errors - continue with hardcoded checks
             pass
 
