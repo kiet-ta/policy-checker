@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from typing import List
 from bs4 import BeautifulSoup
+import logging
 import requests
 from .base_scraper import BasePolicyScraper, PolicyRule
 
@@ -32,13 +33,20 @@ class ApplePolicyScraper(BasePolicyScraper):
         return self.GUIDELINES_URL
     
     def fetch_policies(self) -> List[PolicyRule]:
-        """Fetch and parse Apple's App Store Review Guidelines."""
+        """
+        Fetch and parse Apple's App Store Review Guidelines.
+        
+        Returns:
+            List[PolicyRule]: List of scraped policy rules.
+        """
         policies = []
         try:
+            logging.info(f"Connecting to {self.GUIDELINES_URL}...")
             response = requests.get(self.GUIDELINES_URL, timeout=30)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
             version = self._extract_version(soup)
+            logging.info(f"Detected Apple Policy Version: {version}")
             
             for rule_id, meta in self.CHECKABLE_POLICIES.items():
                 policies.append(PolicyRule(
@@ -67,7 +75,9 @@ class ApplePolicyScraper(BasePolicyScraper):
             ))
             
         except Exception as e:
+            logging.exception(f"Failed to scrape Apple policies: {e}")
             policies = self._get_fallback_policies()
+            logging.warning("Using fallback policies due to scraper failure.")
         
         self.save_cache(policies)
         return policies

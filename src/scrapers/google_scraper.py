@@ -1,6 +1,7 @@
 """Google Play Store Policy Scraper."""
 from datetime import datetime
 from typing import List
+import logging
 import requests
 from bs4 import BeautifulSoup
 from .base_scraper import BasePolicyScraper, PolicyRule
@@ -34,11 +35,22 @@ class GooglePolicyScraper(BasePolicyScraper):
     def get_source_url(self) -> str:
         return self.DEVELOPER_POLICY_URL
     
+    
     def fetch_policies(self) -> List[PolicyRule]:
-        """Fetch Google Play policies."""
-        policies = []
-        version = self._fetch_current_version()
+        """
+        Fetch Google Play policies.
         
+        Returns:
+            List[PolicyRule]: List of scraped policy rules.
+        """
+        policies = []
+        try:
+            version = self._fetch_current_version()
+            logging.info(f"Detected Google Policy Version: {version}")
+        except Exception as e:
+            logging.error(f"Failed to fetch version: {e}")
+            version = "2024.1" # Fallback
+
         for rule_id, meta in self.CHECKABLE_POLICIES.items():
             policies.append(PolicyRule(
                 id=f"GOOGLE_{rule_id}",
@@ -56,8 +68,18 @@ class GooglePolicyScraper(BasePolicyScraper):
         return policies
     
     def _fetch_current_version(self) -> str:
+        """
+        Fetch current policy version from Google.
+        
+        Returns:
+            str: Version string (YYYY.MM).
+        """
         try:
+            logging.info(f"Connecting to {self.POLICY_URL}...")
             response = requests.get(self.POLICY_URL, timeout=30)
-            return datetime.now().strftime("%Y.%m")
-        except:
+            if response.status_code == 200:
+                return datetime.now().strftime("%Y.%m")
+            return "2024.1"
+        except Exception as e:
+            logging.warning(f"Could not fetch Google policy version: {e}")
             return "2024.1"
