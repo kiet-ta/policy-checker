@@ -36,32 +36,33 @@ RULES_PATH = SRC_PATH / "rules" / "rules.yaml"
 
 
 def process_policy_updates(force: bool = False, dry_run: bool = False) -> int:
-    """Process policy updates and generate rules.
+    """
+    Process policy updates and generate rules.
     
     Args:
-        force: If True, process all policies regardless of change detection
-        dry_run: If True, print rules without saving
+        force: If True, process all policies regardless of change detection.
+        dry_run: If True, print rules without saving.
         
     Returns:
-        Number of rules generated/updated
+        int: Number of rules generated/updated.
     """
     logger.info("🔍 Fetching policies from Apple and Google...")
     
     # Initialize scrapers
-    apple = ApplePolicyScraper()
-    google = GooglePolicyScraper()
+    apple_scraper = ApplePolicyScraper()
+    google_scraper = GooglePolicyScraper()
     
     # Fetch current policies
-    apple_policies = apple.fetch_policies()
-    google_policies = google.fetch_policies()
+    apple_policies = apple_scraper.fetch_policies()
+    google_policies = google_scraper.fetch_policies()
     
     logger.info(f"📱 Apple policies fetched: {len(apple_policies)}")
     logger.info(f"🤖 Google policies fetched: {len(google_policies)}")
     
     # Detect changes
     if not force:
-        apple_updates = apple.detect_changes(apple_policies)
-        google_updates = google.detect_changes(google_policies)
+        apple_updates = apple_scraper.detect_changes(apple_policies)
+        google_updates = google_scraper.detect_changes(google_policies)
         logger.info(f"📝 Apple updates detected: {len(apple_updates)}")
         logger.info(f"📝 Google updates detected: {len(google_updates)}")
     else:
@@ -70,11 +71,25 @@ def process_policy_updates(force: bool = False, dry_run: bool = False) -> int:
         from datetime import datetime
         
         apple_updates = [
-            PolicyUpdate(p.id, "added", None, p.version, "Force update", datetime.now())
+            PolicyUpdate(
+                rule_id=p.id, 
+                change_type="added", 
+                old_version=None, 
+                new_version=p.version, 
+                changelog="Force update", 
+                date=datetime.now()
+            )
             for p in apple_policies if p.checkable
         ]
         google_updates = [
-            PolicyUpdate(p.id, "added", None, p.version, "Force update", datetime.now())
+            PolicyUpdate(
+                rule_id=p.id, 
+                change_type="added", 
+                old_version=None, 
+                new_version=p.version, 
+                changelog="Force update", 
+                date=datetime.now()
+            )
             for p in google_policies if p.checkable
         ]
         logger.info(f"⚡ Force mode: processing {len(apple_updates)} Apple, {len(google_updates)} Google")
@@ -103,7 +118,7 @@ def process_policy_updates(force: bool = False, dry_run: bool = False) -> int:
                                 new_rules.append(rule)
                                 logger.info(f"✅ Generated rule: {rule.get('id', 'unknown')}")
                 except Exception as e:
-                    logger.error(f"❌ Failed to generate rule for {policy.id}: {e}")
+                    logger.exception(f"❌ Failed to generate rule for {policy.id}: {e}")
     
     # Process Google updates
     for update in google_updates:
@@ -126,7 +141,7 @@ def process_policy_updates(force: bool = False, dry_run: bool = False) -> int:
                                 new_rules.append(rule)
                                 logger.info(f"✅ Generated rule: {rule.get('id', 'unknown')}")
                 except Exception as e:
-                    logger.error(f"❌ Failed to generate rule for {policy.id}: {e}")
+                    logger.exception(f"❌ Failed to generate rule for {policy.id}: {e}")
     
     # Save or print rules
     if new_rules:
@@ -143,8 +158,8 @@ def process_policy_updates(force: bool = False, dry_run: bool = False) -> int:
     
     # Save updated cache (skip in dry-run)
     if not dry_run:
-        apple.save_cache(apple_policies)
-        google.save_cache(google_policies)
+        apple_scraper.save_cache(apple_policies)
+        google_scraper.save_cache(google_policies)
         logger.info("💾 Policy cache updated")
     
     return len(new_rules)
