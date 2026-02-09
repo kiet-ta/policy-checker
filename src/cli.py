@@ -45,7 +45,7 @@ Examples:
     check_parser.add_argument("--fix", action="store_true", help="Auto-fix issues where possible")
     
     # Update policies command
-    update_parser = subparsers.add_parser("update-policies", help="Fetch latest policies")
+    subparsers.add_parser("update-policies", help="Fetch latest policies")
     
     # Generate icons command
     icons_parser = subparsers.add_parser("generate-icons", help="Generate icon sets from source image")
@@ -198,7 +198,7 @@ def validate_icon(args):
             
             if result.image_info:
                 info = result.image_info
-                print(f"\n📊 Image Info:")
+                print("\n📊 Image Info:")
                 print(f"   Size: {info.width}x{info.height}")
                 print(f"   Format: {info.format}")
                 print(f"   File size: {info.size_bytes / 1024:.1f} KB")
@@ -271,7 +271,7 @@ def check_project(args):
                 console = Console()
                 
                 # Header
-                console.print(f"\n[bold blue]📱 MOBILE APP POLICY CHECK RESULTS[/bold blue]")
+                console.print("\n[bold blue]📱 MOBILE APP POLICY CHECK RESULTS[/bold blue]")
                 console.print(f"Project: {path}")
                 console.print(f"Type: {args.type.upper()} | Platform: {args.platform.upper()}\n")
                 
@@ -325,7 +325,7 @@ def auto_fix_issues(result, project_path):
     fixed_count = 0
     
     try:
-        from validators import IconValidator, AssetValidator
+        from validators import AssetValidator
         
         for violation in result.violations:
             if not violation.auto_fixable:
@@ -348,7 +348,7 @@ def auto_fix_issues(result, project_path):
                     generated = asset_validator.generate_missing_assets(project_path, result.platform)
                     if generated.get('icons') or generated.get('splashes'):
                         fixed_count += 1
-                        print(f"   ✅ Generated missing assets")
+                        print("   ✅ Generated missing assets")
                 except Exception as e:
                     print(f"   ⚠️ Could not generate assets: {e}")
     

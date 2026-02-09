@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import List
 import logging
 import requests
-from bs4 import BeautifulSoup
 from .base_scraper import BasePolicyScraper, PolicyRule
 
 class GooglePolicyScraper(BasePolicyScraper):

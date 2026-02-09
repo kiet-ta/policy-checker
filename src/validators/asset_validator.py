@@ -1,6 +1,6 @@
 """Comprehensive asset validation for mobile apps."""
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 from .image_validator import IconValidator, ValidationResult
 
@@ -188,7 +188,7 @@ class AssetValidator:
         splash_dir.mkdir(parents=True, exist_ok=True)
         
         try:
-            from PIL import Image, ImageDraw
+            from PIL import Image
             
             # Create simple splash screens
             splash_sizes = [(1242, 2688), (828, 1792)] if platform in ('ios', 'both') else []

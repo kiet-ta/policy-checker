@@ -2,7 +2,7 @@
 import re
 import yaml
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 from .base import BaseChecker, CheckResult, PolicyViolation, Severity
 
 class FlutterChecker(BaseChecker):
@@ -51,7 +51,7 @@ class FlutterChecker(BaseChecker):
             try:
                 with open(pubspec_path) as f:
                     return yaml.safe_load(f)
-            except:
+            except Exception:
                 pass
         return None
     

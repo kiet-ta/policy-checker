@@ -1,7 +1,7 @@
 """Pydantic models for dynamic rule configuration."""
 from __future__ import annotations
 from enum import Enum
-from typing import List, Optional, Union, Literal, Any
+from typing import List, Optional, Union, Literal
 from pydantic import BaseModel, Field, field_validator
 
 

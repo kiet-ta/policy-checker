@@ -8,14 +8,13 @@ import json
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 import logging
 
 import yaml
 
 from .schema import (
-    Rule, RuleConfig, Condition, Severity, Platform,
-    FileExistsCondition, FileNotExistsCondition,
+    Rule, RuleConfig, Condition, FileExistsCondition, FileNotExistsCondition,
     JsonPathExistsCondition, JsonPathEqualsCondition, JsonPathMatchesCondition,
     YamlPathExistsCondition, XmlXpathExistsCondition,
     RegexInFileCondition, CompositeCondition
