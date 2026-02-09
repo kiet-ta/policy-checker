@@ -1,5 +1,4 @@
 """Tests for policy checkers."""
-import pytest
 from pathlib import Path
 import tempfile
 import json

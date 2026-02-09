@@ -22,8 +22,8 @@ from pathlib import Path
 SRC_PATH = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(SRC_PATH))
 
-from scrapers import ApplePolicyScraper, GooglePolicyScraper
-from ai.rule_generator import generate_rule_from_policy, update_rules_file, validate_rule
+from scrapers import ApplePolicyScraper, GooglePolicyScraper  # noqa: E402
+from ai.rule_generator import generate_rule_from_policy, update_rules_file, validate_rule  # noqa: E402
 
 # Configure logging
 logging.basicConfig(

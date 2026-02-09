@@ -1,5 +1,4 @@
 """Tests for image validation functionality."""
-import pytest
 from pathlib import Path
 import tempfile
 from PIL import Image

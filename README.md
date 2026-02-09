@@ -143,11 +143,11 @@ This tool uses advanced LLMs (GPT-4/Claude) to keep your policy rules up-to-date
 ## Chi Tiết Kỹ Thuật
 
 > **Đọc thêm tài liệu chuyên sâu:**
-> - [📘 Dynamic Rule Engine & Interpreter Pattern](./rule-engine.md)
-> - [🤖 AI Integration & Prompt Engineering](./ai-integration.md)
-> - [🔒 Security Hardening & Validation](./security-hardening.md)
-> - [🖼️ Image Processing & Icon Validation](./image-processing.md)
-> - [🕷️ Policy Scrapers & Caching](./scrapers.md)
+> - [📘 Dynamic Rule Engine & Interpreter Pattern](./docs/rule-engine.md)
+> - [🤖 AI Integration & Prompt Engineering](./docs/ai-integration.md)
+> - [🔒 Security Hardening & Validation](./docs/security-hardening.md)
+> - [🖼️ Image Processing & Icon Validation](./docs/image-processing.md)
+> - [🕷️ Policy Scrapers & Caching](./docs/scrapers.md)
 
 ## 🔍 What Gets Checked
 
